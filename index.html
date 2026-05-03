@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De mãe e filha - Precificador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --azul: #A5D5E2;
+    --azul-claro: #F0F8FB;
+    --azul-escuro: #2C5F70;
+    --vermelho: #D4421E;
+    --vermelho-claro: #FCEBE6;
+    --amarelo: #F5C518;
+    --verde: #3E8948;
+    --texto: #2C2C2A;
+    --cinza: #6B6B6B;
+    --cinza-claro: #F5F5F5;
+    --borda: rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+  body { background: var(--azul-claro); color: var(--texto); font-size: 14px; }
+  button { cursor: pointer; font-family: inherit; }
+  input, select, textarea {
+    font-family: inherit; font-size: 14px; padding: 8px 10px;
+    border: 1px solid var(--borda); border-radius: 8px; background: white; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--azul); border-color: transparent; }
+
+  /* LOGIN */
+  #tela-login { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+                background: linear-gradient(135deg, var(--azul-claro) 0%, #FFF5EE 100%); padding: 20px; }
+  .card-login { background: white; padding: 36px 32px; border-radius: 20px;
+                box-shadow: 0 4px 24px rgba(165,213,226,0.3); text-align: center; max-width: 380px; width: 100%; }
+  .card-login img { max-width: 120px; height: auto; margin-bottom: 8px; }
+  .titulo-login { font-size: 18px; font-weight: 600; color: var(--azul-escuro); margin-bottom: 4px; }
+  .subtitulo-login { font-size: 13px; color: var(--cinza); margin-bottom: 24px; }
+
+  /* APP */
+  #app { display: none; min-height: 100vh; }
+  header { background: white; padding: 12px 20px; border-bottom: 1px solid var(--borda);
+           display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .logo-topo { display: flex; align-items: center; gap: 10px; }
+  .logo-topo img { height: 40px; width: auto; }
+  .logo-texto { display: flex; flex-direction: column; line-height: 1.2; }
+  .logo-nome { font-size: 14px; font-weight: 600; color: var(--azul-escuro); }
+  .logo-sub { font-size: 10px; color: var(--cinza); text-transform: uppercase; letter-spacing: 1px; }
+  .status-sync { font-size: 12px; color: var(--cinza); display: flex; align-items: center; gap: 8px; }
+  .status-sync .ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); }
+  .btn-sair { background: transparent; border: 1px solid var(--borda); padding: 6px 12px;
+              border-radius: 6px; font-size: 12px; color: var(--cinza); }
+
+  nav.abas { background: white; padding: 0 20px; border-bottom: 1px solid var(--borda);
+             display: flex; gap: 4px; overflow-x: auto; }
+  nav.abas button { background: none; border: none; padding: 12px 16px; font-size: 14px; color: var(--cinza);
+                    border-bottom: 2px solid transparent; white-space: nowrap; }
+  nav.abas button.ativo { color: var(--azul-escuro); border-bottom-color: var(--vermelho); font-weight: 500; }
+
+  main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+  .cabecalho-aba { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .cabecalho-aba h2 { font-size: 20px; color: var(--azul-escuro); font-weight: 600; }
+  .cabecalho-aba p { font-size: 13px; color: var(--cinza); }
+
+  .btn-primario { background: var(--vermelho); color: white; border: none; padding: 10px 16px;
+                  border-radius: 8px; font-size: 14px; font-weight: 500; }
+  .btn-primario:hover { background: #b8351a; }
+  .btn-secundario { background: var(--azul); color: var(--azul-escuro); border: none; padding: 10px 16px;
+                    border-radius: 8px; font-size: 14px; font-weight: 500; }
+  .btn-secundario:hover { background: #8cc4d3; }
+  .btn-cancelar { background: transparent; color: var(--cinza); border: 1px solid var(--borda);
+                  padding: 10px 16px; border-radius: 8px; }
+
+  /* TABELAS */
+  .tabela-wrap { background: white; border-radius: 12px; border: 1px solid var(--borda); overflow-x: auto; }
+  table.dados { width: 100%; border-collapse: collapse; }
+  table.dados th { background: var(--azul-claro); color: var(--azul-escuro); font-weight: 500;
+                   font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+                   padding: 12px; text-align: left; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+  table.dados td { padding: 12px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+  table.dados tr:last-child td { border-bottom: none; }
+  table.dados tr:hover { background: var(--azul-claro); }
+  table.dados td.acoes { text-align: right; white-space: nowrap; }
+  .btn-acao { background: transparent; border: none; color: var(--cinza); padding: 4px 8px; font-size: 16px; cursor: pointer; }
+  .btn-acao:hover { color: var(--vermelho); }
+
+  .vazio { text-align: center; padding: 40px; color: var(--cinza); font-size: 14px; }
+
+  /* CARDS */
+  .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--borda); }
+  .card h4 { font-size: 14px; color: var(--azul-escuro); margin-bottom: 12px; font-weight: 500; }
+
+  /* CONFIG PANEL */
+  .config-panel { background: white; border-radius: 12px; padding: 14px 18px; border: 1px solid var(--borda); margin-bottom: 16px;
+                  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .config-info { display: flex; flex-direction: column; }
+  .config-label { font-size: 11px; color: var(--cinza); text-transform: uppercase; letter-spacing: 1px; }
+  .config-valor { font-size: 14px; color: var(--azul-escuro); margin-top: 2px; }
+  .config-valor strong { font-weight: 600; }
+
+  /* MODAL */
+  .modal-fundo { position: fixed; inset: 0; background: rgba(44,95,112,0.4); z-index: 100;
+                 display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: white; border-radius: 16px; padding: 24px; max-width: 640px; width: 100%;
+           max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 18px; color: var(--azul-escuro); margin-bottom: 16px; }
+  .modal-form label { display: block; font-size: 12px; color: var(--cinza); margin-bottom: 4px; margin-top: 12px; }
+  .modal-botoes { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* CALCULADORA */
+  .calc-section { background: var(--azul-claro); border-radius: 12px; padding: 16px; margin-top: 14px; }
+  .calc-section h4 { font-size: 13px; color: var(--azul-escuro); margin-bottom: 10px; font-weight: 500; }
+  .linha-material { display: grid; grid-template-columns: 1fr 100px 90px 30px; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 12px; }
+  .linha-material .custo { text-align: right; color: var(--cinza); }
+  .btn-add-material { background: white; border: 1px dashed var(--azul); color: var(--azul-escuro);
+                      padding: 8px; border-radius: 6px; font-size: 12px; width: 100%; margin-top: 8px; }
+  .btn-add-material:hover { background: var(--azul-claro); }
+  .custos-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .custos-grid label { font-size: 11px; color: var(--cinza); display: block; margin-bottom: 4px; }
+  .info-hora { font-size: 11px; color: var(--azul-escuro); margin-top: 4px; font-style: italic; }
+
+  .resumo-calc { background: var(--vermelho-claro); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+  .resumo-calc .linha { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; color: var(--vermelho); }
+  .resumo-calc .total { border-top: 2px solid var(--vermelho); margin-top: 8px; padding-top: 8px; font-weight: 600; font-size: 18px; color: var(--vermelho); }
+  .btn-copiar { background: white; border: 1px solid var(--vermelho); color: var(--vermelho);
+                padding: 6px 12px; border-radius: 6px; font-size: 11px; margin-top: 10px; }
+  .btn-copiar:hover { background: var(--vermelho); color: white; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--azul-escuro); color: white;
+           padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 200; display: none; }
+
+  /* SPINNER */
+  .spinner { width: 24px; height: 24px; border: 3px solid var(--azul-claro);
+             border-top-color: var(--vermelho); border-radius: 50%;
+             animation: girar 0.8s linear infinite; margin: 40px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVO */
+  @media (max-width: 600px) {
+    .custos-grid { grid-template-columns: 1fr; }
+    .linha-material { grid-template-columns: 1fr 70px 70px 24px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="card-login">
+    <img src="logo.png" alt="De mãe e filha">
+    <div class="titulo-login">De mãe e filha</div>
+    <div class="subtitulo-login">Precificador</div>
+    <p style="color: var(--cinza); font-size: 13px; margin-bottom: 20px;">Entre com a conta Google autorizada.</p>
+    <div id="g_id_onload"
+         data-client_id="150675190881-tdf5sqb0mulrsfls3jb0k3ng8m1g6dmg.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"></div>
+    <div class="g_id_signin" data-type="standard" data-size="large"></div>
+    <p id="login-erro" style="color: var(--vermelho); margin-top: 16px; font-size: 13px; display: none;"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo-topo">
+      <img src="logo.png" alt="">
+      <div class="logo-texto">
+        <span class="logo-nome">De mãe e filha</span>
+        <span class="logo-sub">Precificador</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="status-sync" id="status-sync">
+        <span class="ponto"></span>
+        <span id="status-texto">Sincronizado</span>
+      </div>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <nav class="abas">
+    <button class="ativo" data-aba="materiais" onclick="mudarAba('materiais')">Materiais</button>
+    <button data-aba="produtos" onclick="mudarAba('produtos')">Produtos</button>
+    <button data-aba="precificador" onclick="mudarAba('precificador')">Assistente de precificação</button>
+  </nav>
+
+  <main id="conteudo"><div class="spinner"></div></main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ========================================================
+// CONFIGURAÇÃO
+// ========================================================
+
+const CONFIG = {
+  apiUrl: 'https://script.google.com/macros/s/AKfycbyOHBlHxbTLXtMx8u86sjRppLnCkQHLIGnClePkuRrR1CCQrsws2KUVftkMGVUIzuNyEA/exec',
+  googleClientId: '150675190881-tdf5sqb0mulrsfls3jb0k3ng8m1g6dmg.apps.googleusercontent.com',
+  logoUrl: 'logo.png'
+};
+
+// ========================================================
+// ESTADO
+// ========================================================
+
+let emailAtual = null;
+let dados = { materiais: [], produtos: [], receitas: [], configuracoes: { valorHoraPadrao: 30 } };
+let abaAtual = 'materiais';
+
+// Estado do precificador
+let precificador = {
+  nome: '',
+  descricao: '',
+  materiais: [],
+  horas: 1,
+  outrosCustos: 0,
+  margemPct: 40,
+  produtoEditando: null  // { linha, nomeAntigo } se estiver editando
+};
+
+const CAMPOS = {
+  materiais: ['nome', 'unidade', 'custo', 'obs'],
+  produtos: ['nome', 'descricao', 'horas', 'outrosCustos', 'margemPct', 'precoCalculado', 'dataAtualizacao']
+};
+
+// ========================================================
+// LOGIN
+// ========================================================
+
+function handleCredentialResponse(response) {
+  const dadosUsuario = JSON.parse(atob(response.credential.split('.')[1]));
+  emailAtual = dadosUsuario.email;
+  document.getElementById('login-erro').style.display = 'none';
+
+  carregarDadosIniciais().then(ok => {
+    if (ok) {
+      document.getElementById('tela-login').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      mudarAba('materiais');
+    } else {
+      document.getElementById('login-erro').textContent = 'Seu email não está autorizado.';
+      document.getElementById('login-erro').style.display = 'block';
+    }
+  });
+}
+
+function sair() {
+  emailAtual = null;
+  document.getElementById('tela-login').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ========================================================
+// API
+// ========================================================
+
+async function carregarDadosIniciais() {
+  try {
+    mostrarStatus('Carregando...', false);
+    const r = await fetch(`${CONFIG.apiUrl}?email=${encodeURIComponent(emailAtual)}`);
+    const j = await r.json();
+    if (j.erro) { console.error(j.erro); return false; }
+    dados.materiais = j.materiais || [];
+    dados.produtos = j.produtos || [];
+    dados.receitas = j.receitas || [];
+    dados.configuracoes = j.configuracoes || { valorHoraPadrao: 30 };
+    mostrarStatus('Sincronizado', true);
+    return true;
+  } catch (err) {
+    console.error(err);
+    mostrarStatus('Erro de conexão', false);
+    return false;
+  }
+}
+
+async function recarregarAba(aba) {
+  try {
+    mostrarStatus('Sincronizando...', false);
+    const r = await fetch(`${CONFIG.apiUrl}?email=${encodeURIComponent(emailAtual)}&aba=${aba}`);
+    const j = await r.json();
+    if (j.dados) {
+      dados[aba] = j.dados;
+      renderizarAba(abaAtual);
+      mostrarStatus('Sincronizado', true);
+    }
+  } catch (err) {
+    mostrarStatus('Erro', false);
+  }
+}
+
+async function recarregarReceitas() {
+  try {
+    const r = await fetch(`${CONFIG.apiUrl}?email=${encodeURIComponent(emailAtual)}&aba=receitas`);
+    const j = await r.json();
+    if (j.dados) dados.receitas = j.dados;
+  } catch(e) { console.error(e); }
+}
+
+async function enviarPost(body) {
+  try {
+    mostrarStatus('Salvando...', false);
+    const r = await fetch(CONFIG.apiUrl, { method: 'POST', body: JSON.stringify({ email: emailAtual, ...body }) });
+    const j = await r.json();
+    if (j.erro) throw new Error(j.erro);
+    mostrarStatus('Salvo', true);
+    toast('Salvo com sucesso!');
+    return true;
+  } catch (err) {
+    mostrarStatus('Erro', false);
+    toast('Erro: ' + err.message);
+    return false;
+  }
+}
+
+// ========================================================
+// NAVEGAÇÃO
+// ========================================================
+
+function mudarAba(aba) {
+  abaAtual = aba;
+  document.querySelectorAll('nav.abas button').forEach(b => {
+    b.classList.toggle('ativo', b.dataset.aba === aba);
+  });
+  renderizarAba(aba);
+}
+
+function renderizarAba(aba) {
+  const c = document.getElementById('conteudo');
+  if (aba === 'materiais') c.innerHTML = renderMateriais();
+  else if (aba === 'produtos') c.innerHTML = renderProdutos();
+  else if (aba === 'precificador') {
+    c.innerHTML = renderPrecificador();
+    recalcular();
+  }
+}
+
+// ========================================================
+// ABA: MATERIAIS
+// ========================================================
+
+function renderMateriais() {
+  const l = dados.materiais;
+  return `
+    <div class="cabecalho-aba">
+      <div><h2>Materiais</h2><p>${l.length} cadastrados</p></div>
+      <button class="btn-primario" onclick="abrirModalGenerico('materiais')">+ Novo material</button>
+    </div>
+    ${l.length === 0 ? '<div class="vazio">Nenhum material cadastrado ainda. Comece adicionando os insumos que você usa.</div>' : `
+    <div class="tabela-wrap"><table class="dados">
+      <thead><tr><th>Nome</th><th>Unidade</th><th>Custo</th><th>Observação</th><th></th></tr></thead>
+      <tbody>${l.map(m => `
+        <tr>
+          <td><strong>${esc(m.nome)}</strong></td>
+          <td>${esc(m.unidade || '-')}</td>
+          <td>R$ ${formatarMoeda(m.custo)}</td>
+          <td style="color:var(--cinza);">${esc(m.obs || '-')}</td>
+          <td class="acoes">
+            <button class="btn-acao" onclick='editar("materiais", ${m._linha})' title="Editar">✎</button>
+            <button class="btn-acao" onclick='excluir("materiais", ${m._linha})' title="Excluir">🗑</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table></div>`}`;
+}
+
+// ========================================================
+// ABA: PRODUTOS
+// ========================================================
+
+function renderProdutos() {
+  const l = dados.produtos;
+  return `
+    <div class="cabecalho-aba">
+      <div><h2>Produtos</h2><p>${l.length} produtos precificados</p></div>
+      <button class="btn-primario" onclick="novoProdutoNoPrecificador()">+ Novo produto</button>
+    </div>
+    ${l.length === 0 ? '<div class="vazio">Nenhum produto precificado ainda. Use o Assistente de precificação pra começar.</div>' : `
+    <div class="tabela-wrap"><table class="dados">
+      <thead><tr><th>Nome</th><th>Descrição</th><th>Horas</th><th>Margem</th><th>Preço</th><th>Atualizado</th><th></th></tr></thead>
+      <tbody>${l.map(p => `
+        <tr>
+          <td><strong>${esc(p.nome)}</strong></td>
+          <td style="color:var(--cinza);">${esc(p.descricao || '-')}</td>
+          <td>${p.horas || 0}h</td>
+          <td>${p.margemPct || 0}%</td>
+          <td><strong style="color:var(--vermelho);">R$ ${formatarMoeda(p.precoCalculado)}</strong></td>
+          <td style="color:var(--cinza);font-size:12px;">${formatarData(p.dataAtualizacao)}</td>
+          <td class="acoes">
+            <button class="btn-acao" onclick='editarProdutoNoPrecificador(${p._linha})' title="Editar e recalcular">✎</button>
+            <button class="btn-acao" onclick='excluir("produtos", ${p._linha})' title="Excluir">🗑</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table></div>`}`;
+}
+
+// ========================================================
+// ABA: PRECIFICADOR
+// ========================================================
+
+function novoProdutoNoPrecificador() {
+  precificador = {
+    nome: '',
+    descricao: '',
+    materiais: [],
+    horas: 1,
+    outrosCustos: 0,
+    margemPct: 40,
+    produtoEditando: null
+  };
+  mudarAba('precificador');
+}
+
+function editarProdutoNoPrecificador(linha) {
+  const p = dados.produtos.find(x => x._linha === linha);
+  if (!p) return;
+
+  // Carrega receita do produto
+  const receita = dados.receitas
+    .filter(r => String(r.produto).trim() === String(p.nome).trim())
+    .map(r => ({ material: r.material, quantidade: Number(r.quantidade) }));
+
+  precificador = {
+    nome: p.nome || '',
+    descricao: p.descricao || '',
+    materiais: receita,
+    horas: Number(p.horas || 1),
+    outrosCustos: Number(p.outrosCustos || 0),
+    margemPct: Number(p.margemPct || 40),
+    produtoEditando: { linha: linha, nomeAntigo: p.nome }
+  };
+  mudarAba('precificador');
+}
+
+function renderPrecificador() {
+  const cfg = dados.configuracoes;
+  const editando = precificador.produtoEditando !== null;
+  const tituloAcao = editando ? 'Editando produto' : 'Novo cálculo';
+
+  return `
+    <div class="cabecalho-aba">
+      <div><h2>Assistente de precificação</h2><p>${tituloAcao}</p></div>
+    </div>
+
+    <div class="config-panel">
+      <div class="config-info">
+        <span class="config-label">Configuração padrão</span>
+        <span class="config-valor">Valor da hora trabalhada: <strong>R$ ${formatarMoeda(cfg.valorHoraPadrao)}</strong></span>
+      </div>
+      <button class="btn-secundario" onclick="abrirModalConfig()" style="font-size:12px;padding:6px 12px;">Editar</button>
+    </div>
+
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:12px;color:var(--cinza);">Nome do produto *</label>
+          <input type="text" id="prec-nome" value="${esc(precificador.nome)}" oninput="precificador.nome = this.value;" placeholder="Ex: Caixa P personalizada">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--cinza);">Descrição (opcional)</label>
+          <input type="text" id="prec-desc" value="${esc(precificador.descricao)}" oninput="precificador.descricao = this.value;" placeholder="Ex: 10x10x5cm com tampa">
+        </div>
+      </div>
+
+      <div class="calc-section">
+        <h4>Materiais usados</h4>
+        <div id="lista-materiais-prec"></div>
+        <button class="btn-add-material" onclick="adicionarMaterialPrec()">+ Adicionar material</button>
+      </div>
+
+      <div class="custos-grid">
+        <div>
+          <label>Horas trabalhadas</label>
+          <input type="number" step="0.5" min="0" id="prec-horas" value="${precificador.horas}" oninput="precificador.horas = Number(this.value); recalcular();">
+          <div class="info-hora" id="info-mao-obra"></div>
+        </div>
+        <div>
+          <label>Outros custos (R$)</label>
+          <input type="number" step="0.01" min="0" id="prec-outros" value="${precificador.outrosCustos}" oninput="precificador.outrosCustos = Number(this.value); recalcular();">
+        </div>
+        <div>
+          <label>Margem de lucro (%)</label>
+          <input type="number" step="1" min="0" id="prec-margem" value="${precificador.margemPct}" oninput="precificador.margemPct = Number(this.value); recalcular();">
+        </div>
+      </div>
+
+      <div class="resumo-calc" id="resumo-calc"></div>
+
+      <div class="modal-botoes">
+        ${editando ? '<button class="btn-cancelar" onclick="cancelarEdicao()">Cancelar edição</button>' : ''}
+        <button class="btn-primario" onclick="salvarComoProduto()">${editando ? 'Atualizar produto' : 'Salvar como produto'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderListaMateriaisPrec() {
+  const container = document.getElementById('lista-materiais-prec');
+  if (!container) return;
+
+  if (precificador.materiais.length === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--cinza);padding:6px 0;">Nenhum material adicionado ainda.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 100px 90px 30px;gap:8px;font-size:11px;color:var(--cinza);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+      <span>Material</span><span>Quantidade</span><span style="text-align:right;">Custo</span><span></span>
+    </div>
+  ` + precificador.materiais.map((m, i) => {
+    const mat = dados.materiais.find(x => String(x.nome).trim() === String(m.material).trim());
+    const custoUnit = mat ? Number(mat.custo || 0) : 0;
+    const total = custoUnit * Number(m.quantidade || 0);
+    return `
+      <div class="linha-material">
+        <select onchange="precificador.materiais[${i}].material = this.value; recalcular();">
+          <option value="">Selecione o material...</option>
+          ${dados.materiais.map(mat2 => `<option value="${esc(mat2.nome)}" ${mat2.nome === m.material ? 'selected' : ''}>${esc(mat2.nome)}${mat2.unidade ? ' (' + esc(mat2.unidade) + ')' : ''}</option>`).join('')}
+        </select>
+        <input type="number" step="0.001" min="0" value="${m.quantidade}" placeholder="Qtd" oninput="precificador.materiais[${i}].quantidade = Number(this.value); recalcular();">
+        <div class="custo">R$ ${formatarMoeda(total)}</div>
+        <button class="btn-acao" onclick="removerMaterialPrec(${i})" title="Remover">×</button>
+      </div>`;
+  }).join('');
+}
+
+function adicionarMaterialPrec() {
+  precificador.materiais.push({ material: '', quantidade: 1 });
+  recalcular();
+}
+
+function removerMaterialPrec(idx) {
+  precificador.materiais.splice(idx, 1);
+  recalcular();
+}
+
+function recalcular() {
+  renderListaMateriaisPrec();
+
+  const cfg = dados.configuracoes;
+  const valorHora = Number(cfg.valorHoraPadrao || 30);
+
+  let custoMateriais = 0;
+  precificador.materiais.forEach(m => {
+    const mat = dados.materiais.find(x => String(x.nome).trim() === String(m.material).trim());
+    if (mat) custoMateriais += Number(mat.custo || 0) * Number(m.quantidade || 0);
+  });
+
+  const horas = Number(precificador.horas || 0);
+  const maoObra = horas * valorHora;
+  const outros = Number(precificador.outrosCustos || 0);
+  const margem = Number(precificador.margemPct || 0);
+
+  const custoTotal = custoMateriais + maoObra + outros;
+  const precoFinal = custoTotal * (1 + margem / 100);
+
+  // Atualiza info da mão de obra
+  const infoEl = document.getElementById('info-mao-obra');
+  if (infoEl) infoEl.textContent = `= R$ ${formatarMoeda(maoObra)} (R$ ${formatarMoeda(valorHora)}/h)`;
+
+  // Atualiza resumo
+  const resumoEl = document.getElementById('resumo-calc');
+  if (resumoEl) {
+    resumoEl.innerHTML = `
+      <div class="linha"><span>Custo materiais</span><span>R$ ${formatarMoeda(custoMateriais)}</span></div>
+      <div class="linha"><span>+ Mão de obra (${horas}h × R$ ${formatarMoeda(valorHora)})</span><span>R$ ${formatarMoeda(maoObra)}</span></div>
+      <div class="linha"><span>+ Outros custos</span><span>R$ ${formatarMoeda(outros)}</span></div>
+      <div class="linha" style="border-top:1px solid var(--vermelho);margin-top:4px;padding-top:6px;"><span>= Custo total</span><span>R$ ${formatarMoeda(custoTotal)}</span></div>
+      <div class="linha"><span>+ Margem ${margem}%</span><span>R$ ${formatarMoeda(precoFinal - custoTotal)}</span></div>
+      <div class="linha total"><span>Preço final</span><span>R$ ${formatarMoeda(precoFinal)}</span></div>
+      <button class="btn-copiar" onclick="copiarPreco(${precoFinal.toFixed(2)})">📋 Copiar preço</button>
+    `;
+    resumoEl.dataset.precoFinal = precoFinal.toFixed(2);
+  }
+}
+
+function copiarPreco(valor) {
+  const texto = `R$ ${formatarMoeda(valor)}`;
+  navigator.clipboard.writeText(texto).then(() => {
+    toast('Preço copiado: ' + texto);
+  }).catch(() => {
+    toast('Não consegui copiar. Tente manualmente.');
+  });
+}
+
+async function salvarComoProduto() {
+  if (!precificador.nome.trim()) {
+    toast('Dá um nome pro produto primeiro');
+    return;
+  }
+
+  const materiaisValidos = precificador.materiais.filter(m => m.material && Number(m.quantidade) > 0);
+  if (materiaisValidos.length === 0) {
+    if (!confirm('Salvar produto sem materiais cadastrados?')) return;
+  }
+
+  const precoFinal = Number(document.getElementById('resumo-calc')?.dataset.precoFinal || 0);
+  const hoje = new Date().toLocaleDateString('pt-BR');
+
+  const dadosProduto = {
+    nome: precificador.nome,
+    descricao: precificador.descricao,
+    horas: precificador.horas,
+    outrosCustos: precificador.outrosCustos,
+    margemPct: precificador.margemPct,
+    precoCalculado: precoFinal,
+    dataAtualizacao: hoje
+  };
+
+  const editando = precificador.produtoEditando !== null;
+  const body = {
+    acao: 'salvarProdutoComReceita',
+    tipoOperacao: editando ? 'atualizar' : 'novo',
+    dadosProduto: dadosProduto,
+    materiais: materiaisValidos,
+    nomeAntigo: editando ? precificador.produtoEditando.nomeAntigo : null,
+    linhaProduto: editando ? precificador.produtoEditando.linha : null
+  };
+
+  const ok = await enviarPost(body);
+  if (ok) {
+    await Promise.all([recarregarAba('produtos'), recarregarReceitas()]);
+    toast(editando ? 'Produto atualizado!' : 'Produto salvo!');
+    novoProdutoNoPrecificador();
+    mudarAba('produtos');
+  }
+}
+
+function cancelarEdicao() {
+  if (confirm('Descartar mudanças?')) {
+    novoProdutoNoPrecificador();
+    mudarAba('produtos');
+  }
+}
+
+// ========================================================
+// MODAL DE CONFIGURAÇÃO
+// ========================================================
+
+function abrirModalConfig() {
+  const cfg = dados.configuracoes;
+  const html = `
+    <div class="modal-fundo" id="modal-fundo" onclick="if(event.target===this) fecharModal()">
+      <div class="modal" style="max-width:400px;">
+        <h3>Configuração padrão</h3>
+        <form class="modal-form" id="form-config" onsubmit="event.preventDefault(); salvarConfig();">
+          <label>Valor da hora trabalhada (R$)</label>
+          <input type="number" step="0.01" min="0" name="valorHoraPadrao" value="${cfg.valorHoraPadrao || 30}" required>
+          <p style="font-size:11px;color:var(--cinza);margin-top:8px;">Esse valor é usado em todos os cálculos do precificador.</p>
+          <div class="modal-botoes">
+            <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button type="submit" class="btn-primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function salvarConfig() {
+  const form = document.getElementById('form-config');
+  const novaCfg = {
+    valorHoraPadrao: Number(form.elements.valorHoraPadrao.value || 30)
+  };
+  const ok = await enviarPost({ acao: 'salvarConfiguracoes', dados: novaCfg });
+  if (ok) {
+    dados.configuracoes = novaCfg;
+    fecharModal();
+    if (abaAtual === 'precificador') renderizarAba('precificador');
+  }
+}
+
+// ========================================================
+// MODAL GENÉRICO (materiais)
+// ========================================================
+
+function abrirModalGenerico(aba, dadosEdicao = null, linhaId = null) {
+  const campos = CAMPOS[aba];
+  const titulo = dadosEdicao ? 'Editar material' : 'Novo material';
+
+  const labels = {
+    nome: 'Nome do material *',
+    unidade: 'Unidade (folha, rolo, m, etc)',
+    custo: 'Custo unitário (R$)',
+    obs: 'Observação'
+  };
+
+  const html = `
+    <div class="modal-fundo" id="modal-fundo" onclick="if(event.target===this) fecharModal()">
+      <div class="modal" style="max-width:480px;">
+        <h3>${titulo}</h3>
+        <form class="modal-form" id="form-modal" onsubmit="event.preventDefault(); salvarModalGenerico('${aba}', ${linhaId});">
+          ${campos.map(c => {
+            const tipo = c === 'custo' ? 'number' : 'text';
+            const step = c === 'custo' ? 'step="0.01" min="0"' : '';
+            const required = c === 'nome' ? 'required' : '';
+            return `
+              <label>${labels[c] || c}</label>
+              <input type="${tipo}" ${step} ${required} name="${c}" value="${dadosEdicao ? esc(dadosEdicao[c] || '') : ''}">
+            `;
+          }).join('')}
+          <div class="modal-botoes">
+            <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button type="submit" class="btn-primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function fecharModal() { document.getElementById('modal-fundo')?.remove(); }
+
+async function salvarModalGenerico(aba, linhaId) {
+  const form = document.getElementById('form-modal');
+  const dadosForm = {};
+  CAMPOS[aba].forEach(c => { dadosForm[c] = form.elements[c].value; });
+  const acao = linhaId ? 'atualizar' : 'adicionar';
+  const payload = { acao, aba, dados: dadosForm };
+  if (linhaId) payload.linhaId = linhaId;
+  const ok = await enviarPost(payload);
+  if (ok) { fecharModal(); await recarregarAba(aba); }
+}
+
+function editar(aba, linha) {
+  const item = dados[aba].find(x => x._linha === linha);
+  abrirModalGenerico(aba, item, linha);
+}
+
+async function excluir(aba, linha) {
+  if (!confirm('Excluir esse item?')) return;
+  const ok = await enviarPost({ acao: 'excluir', aba, linhaId: linha });
+  if (ok) await recarregarAba(aba);
+}
+
+// ========================================================
+// UTILITÁRIOS
+// ========================================================
+
+function esc(t) {
+  return String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatarMoeda(v) {
+  return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatarData(d) {
+  if (!d) return '-';
+  if (d instanceof Date || (typeof d === 'string' && d.includes('T'))) {
+    return new Date(d).toLocaleDateString('pt-BR');
+  }
+  return d;
+}
+
+function mostrarStatus(t, ok) {
+  document.getElementById('status-texto').textContent = t;
+  document.querySelector('#status-sync .ponto').style.background = ok ? 'var(--verde)' : 'var(--vermelho)';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// Atualiza o data-client_id do botão de login na hora certa
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('g_id_onload');
+  if (el && CONFIG.googleClientId !== 'COLE_AQUI_O_CLIENT_ID.apps.googleusercontent.com') {
+    el.setAttribute('data-client_id', CONFIG.googleClientId);
+  }
+});
+</script>
+</body>
+</html>
