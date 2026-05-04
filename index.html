@@ -390,6 +390,7 @@ function renderProdutos() {
           <td style="color:var(--cinza);font-size:12px;">${formatarData(p.dataAtualizacao)}</td>
           <td class="acoes">
             <button class="btn-acao" onclick='editarProdutoNoPrecificador(${p._linha})' title="Editar e recalcular">✎</button>
+            <button class="btn-acao" onclick='duplicarProdutoNoPrecificador(${p._linha})' title="Duplicar">⎘</button>
             <button class="btn-acao" onclick='excluir("produtos", ${p._linha})' title="Excluir">🗑</button>
           </td>
         </tr>`).join('')}</tbody>
@@ -432,6 +433,29 @@ function editarProdutoNoPrecificador(linha) {
     produtoEditando: { linha: linha, nomeAntigo: p.nome }
   };
   mudarAba('precificador');
+}
+
+function duplicarProdutoNoPrecificador(linha) {
+  const p = dados.produtos.find(x => x._linha === linha);
+  if (!p) return;
+
+  // Carrega receita do produto original
+  const receita = dados.receitas
+    .filter(r => String(r.produto).trim() === String(p.nome).trim())
+    .map(r => ({ material: r.material, quantidade: Number(r.quantidade) }));
+
+  // Abre como NOVO produto, com tudo copiado
+  precificador = {
+    nome: (p.nome || '') + ' (cópia)',
+    descricao: p.descricao || '',
+    materiais: receita,
+    horas: Number(p.horas || 1),
+    outrosCustos: Number(p.outrosCustos || 0),
+    margemPct: Number(p.margemPct || 40),
+    produtoEditando: null
+  };
+  mudarAba('precificador');
+  toast('Produto duplicado! Ajuste o que precisar e salve.');
 }
 
 function renderPrecificador() {
