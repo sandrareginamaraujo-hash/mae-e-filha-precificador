@@ -150,7 +150,7 @@
 <!-- LOGIN -->
 <div id="tela-login">
   <div class="card-login">
-    <img src="logo.jpg" alt="De mãe e filha">
+    <img src="logo.png" alt="De mãe e filha">
     <div class="titulo-login">De mãe e filha</div>
     <div class="subtitulo-login">Precificador</div>
     <p style="color: var(--cinza); font-size: 13px; margin-bottom: 20px;">Entre com a conta Google autorizada.</p>
@@ -166,7 +166,7 @@
 <div id="app">
   <header>
     <div class="logo-topo">
-      <img src="logo.jpg" alt="">
+      <img src="logo.png" alt="">
       <div class="logo-texto">
         <span class="logo-nome">De mãe e filha</span>
         <span class="logo-sub">Precificador</span>
@@ -200,7 +200,7 @@
 const CONFIG = {
   apiUrl: 'https://script.google.com/macros/s/AKfycbyOHBlHxbTLXtMx8u86sjRppLnCkQHLIGnClePkuRrR1CCQrsws2KUVftkMGVUIzuNyEA/exec',
   googleClientId: '150675190881-tdf5sqb0mulrsfls3jb0k3ng8m1g6dmg.apps.googleusercontent.com',
-  logoUrl: 'logo.jpg'
+  logoUrl: 'logo.png'
 };
 
 // ========================================================
@@ -520,7 +520,7 @@ function renderListaMateriaisPrec() {
           ${dados.materiais.map(mat2 => `<option value="${esc(mat2.nome)}" ${mat2.nome === m.material ? 'selected' : ''}>${esc(mat2.nome)}${mat2.unidade ? ' (' + esc(mat2.unidade) + ')' : ''}</option>`).join('')}
         </select>
         <input type="number" step="0.001" min="0" value="${m.quantidade}" placeholder="Qtd" oninput="precificador.materiais[${i}].quantidade = Number(this.value); recalcular();">
-        <div class="custo">R$ ${formatarMoeda(total)}</div>
+        <div class="custo" data-material-idx="${i}">R$ ${formatarMoeda(total)}</div>
         <button class="btn-acao" onclick="removerMaterialPrec(${i})" title="Remover">×</button>
       </div>`;
   }).join('');
@@ -528,16 +528,30 @@ function renderListaMateriaisPrec() {
 
 function adicionarMaterialPrec() {
   precificador.materiais.push({ material: '', quantidade: 1 });
+  renderListaMateriaisPrec();
   recalcular();
 }
 
 function removerMaterialPrec(idx) {
   precificador.materiais.splice(idx, 1);
+  renderListaMateriaisPrec();
   recalcular();
 }
 
+function atualizarCustosMateriais() {
+  // Só atualiza os textos de custo de cada material, sem redesenhar os inputs
+  precificador.materiais.forEach((m, i) => {
+    const mat = dados.materiais.find(x => String(x.nome).trim() === String(m.material).trim());
+    const custoUnit = mat ? Number(mat.custo || 0) : 0;
+    const total = custoUnit * Number(m.quantidade || 0);
+    const linha = document.querySelector(`[data-material-idx="${i}"]`);
+    if (linha) linha.textContent = `R$ ${formatarMoeda(total)}`;
+  });
+}
+
 function recalcular() {
-  renderListaMateriaisPrec();
+  // Atualiza só os custos exibidos (sem redesenhar os inputs)
+  atualizarCustosMateriais();
 
   const cfg = dados.configuracoes;
   const valorHora = Number(cfg.valorHoraPadrao || 30);
@@ -647,7 +661,7 @@ function abrirModalConfig() {
         <h3>Configuração padrão</h3>
         <form class="modal-form" id="form-config" onsubmit="event.preventDefault(); salvarConfig();">
           <label>Valor da hora trabalhada (R$)</label>
-          <input type="number" step="0.01" min="0" name="valorHoraPadrao" value="${cfg.valorHoraPadrao || 30}" required>
+          <input type="text" inputmode="decimal" name="valorHoraPadrao" value="${String(cfg.valorHoraPadrao || 30).replace('.', ',')}" required>
           <p style="font-size:11px;color:var(--cinza);margin-top:8px;">Esse valor é usado em todos os cálculos do precificador.</p>
           <div class="modal-botoes">
             <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
@@ -662,7 +676,7 @@ function abrirModalConfig() {
 async function salvarConfig() {
   const form = document.getElementById('form-config');
   const novaCfg = {
-    valorHoraPadrao: Number(form.elements.valorHoraPadrao.value || 30)
+    valorHoraPadrao: parseNumero(form.elements.valorHoraPadrao.value)
   };
   const ok = await enviarPost({ acao: 'salvarConfiguracoes', dados: novaCfg });
   if (ok) {
